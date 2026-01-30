@@ -1,0 +1,17 @@
+{
+  "name": "skills-cil",
+  "version": "1.0.0",
+  "bin": {
+    "skills-cil": "index.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "degit": "^2.8.4"
+  }
+}
