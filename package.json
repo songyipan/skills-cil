@@ -1,17 +1,22 @@
 {
-  "name": "skills-cil",
+  "name": "test-cli",
   "version": "1.0.0",
-  "bin": {
-    "skills-cil": "index.js"
-  },
+  "description": "",
+  "main": "index.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "node ./src/index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "packageManager": "pnpm@10.12.3",
   "dependencies": {
-    "degit": "^2.8.4"
+    "axios": "^1.13.4",
+    "chalk": "^5.6.2",
+    "commander": "^14.0.3",
+    "giget": "^3.1.1",
+    "inquirer": "^13.2.2"
   }
 }
