@@ -1,19 +1,44 @@
 import chalk from 'chalk';
 import { downloadTemplate } from 'giget';
 import inquirer from 'inquirer';
-export const downloadProject = async (name) => {
+import fs from 'fs';
+
+// 创建配置文件
+async function createJsonFile(name, apiKey) {
+  try {
+    const json = {
+      'project-name': name,
+      skills: [],
+      apiKey,
+    };
+
+    const filePath = `./${name}/skills.register.json`;
+
+    await fs.promises.writeFile(filePath, JSON.stringify(json, null, 2), 'utf8');
+
+  } catch (error) {
+    console.error('Failed to create skills.register.json:', error);
+  }
+}
+
+// 下载项目
+export const downloadProject = async (name, apiKey) => {
   try {
     console.log(chalk.blue('creating project...'));
-    await downloadTemplate('github:antfu/skills', {
+    await downloadTemplate('github:songyipan/skills', {
       dir: `./${name}`,
       force: true,
     });
+
+    await createJsonFile(name, apiKey);
+
     console.log(chalk.green('Successfully!!!'));
   } catch (e) {
     console.error(e);
   }
 };
 
+// 输入项目名
 const inputProjectName = async () => {
   const answers = await inquirer.prompt([
     {
@@ -21,6 +46,11 @@ const inputProjectName = async () => {
       name: 'projectName',
       message: 'Please input your project name:',
     },
+    {
+      type: "input",
+      name:"apiKey",
+      message: 'Please input your api key:',
+    }
   ]);
 
   if (!answers.projectName) {
@@ -28,7 +58,12 @@ const inputProjectName = async () => {
     process.exit(1);
   }
 
-  await downloadProject(answers.projectName);
+  if (!answers.apiKey) {
+    console.log(chalk.red('View the API key in the personal center'));
+    process.exit(1);
+  }
+
+  await downloadProject(answers.projectName, answers.apiKey);
 };
 
 export const createNewProject = () => {

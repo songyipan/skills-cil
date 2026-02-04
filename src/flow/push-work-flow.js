@@ -7,12 +7,6 @@ import archiver from "archiver";
 export const runPushWorkflow = async () => {
   try {
     const answers = await inquirer.prompt([
-      // {
-      //   type: "input",
-      //   name: "token",
-      //   message: "Enter your SkillsHub token:",
-      // },
-      // skill name
       {
         type: "input",
         name: "skillName",
