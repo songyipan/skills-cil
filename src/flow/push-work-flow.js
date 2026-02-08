@@ -3,6 +3,7 @@ import axios from "axios";
 import fs from "fs";
 import path from "path";
 import archiver from "archiver";
+import FormData from "form-data";
 
 export const runPushWorkflow = async () => {
   try {
@@ -14,20 +15,126 @@ export const runPushWorkflow = async () => {
       },
     ]);
 
-    selectFile({ fileName: answers.skillName });
+    const archivePath = await selectFile({ fileName: answers.skillName });
+    await upload({ filePath: archivePath, skillName: answers.skillName });
   } catch (error) {
     console.error(error);
   }
 };
 
+async function validateFile(filePath) {
+  const absolutePath = path.resolve(filePath);
+
+  if (!fs.existsSync(absolutePath)) {
+    throw new Error(`File not found: ${absolutePath}`);
+  }
+
+  const stat = fs.statSync(absolutePath);
+  if (stat.isDirectory()) {
+    throw new Error(`Path is a directory, not a file: ${absolutePath}`);
+  }
+
+  const MAX_SIZE = 3 * 1024 * 1024;
+  if (stat.size > MAX_SIZE) {
+    throw new Error(
+      `File size exceeds 3MB limit (current: ${(stat.size / 1024 / 1024).toFixed(2)}MB)`,
+    );
+  }
+
+  return {
+    absolutePath,
+    fileName: path.basename(absolutePath),
+    size: stat.size,
+  };
+}
+
+async function getApiKey() {
+  const configPath = path.resolve("skills.register.json");
+  const configContent = await fs.promises.readFile(configPath, "utf8");
+  const config = JSON.parse(configContent);
+
+  if (!config.apiKey) {
+    throw new Error("apiKey not found in skills.register.json");
+  }
+
+  return config.apiKey;
+}
+
+async function getSkillInfo(skillName) {
+  const skillDir = path.resolve(skillName);
+
+  const skillsJsonPath = path.join(skillDir, "skills.json");
+  const skillMdPath = path.join(skillDir, "SKILL.md");
+
+  if (!fs.existsSync(skillsJsonPath)) {
+    throw new Error(`skills.json not found: ${skillsJsonPath}`);
+  }
+  if (!fs.existsSync(skillMdPath)) {
+    throw new Error(`SKILL.md not found: ${skillMdPath}`);
+  }
+
+  const skillsJsonContent = await fs.promises.readFile(skillsJsonPath, "utf8");
+  const skillsJson = JSON.parse(skillsJsonContent);
+
+  const mainContent = await fs.promises.readFile(skillMdPath, "utf8");
+
+  return {
+    desc: skillsJson["skill-description"] || "",
+    mainContent,
+  };
+}
+
+async function createUploadFormData(absolutePath, fileName, apiKey) {
+  const formData = new FormData();
+  formData.append("file", fs.createReadStream(absolutePath));
+  formData.append("fileName", fileName.replace(".zip", ""));
+  formData.append("apiKey", apiKey);
+  return formData;
+}
+
+async function doUpload(formData) {
+  const response = await axios.post(
+    "http://localhost:3000/api/uploads",
+    formData,
+    {
+      headers: {
+        ...formData.getHeaders(),
+      },
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
+    },
+  );
+  return response.data;
+}
+
 // upload
-export const upload = async ({ skillName }) => {
+export const upload = async ({ filePath, skillName }) => {
   try {
-    await axios.post("http://localhost:3000/api/uploads", {
-      fileName: skillName,
+    const { absolutePath, fileName, size } = await validateFile(filePath);
+    console.log(
+      `Uploading: ${fileName} (${(size / 1024 / 1024).toFixed(2)}MB) ...`,
+    );
+
+    const apiKey = await getApiKey();
+    const { desc, mainContent } = await getSkillInfo(skillName);
+    const formData = await createUploadFormData(absolutePath, fileName, apiKey);
+
+    const responseData = await doUpload(formData);
+
+    await createSkill({
+      name: fileName.replace(".zip", ""),
+      desc,
+      mainContent,
+      downloadUrl: responseData.url,
+      apiKey,
     });
+    console.log("Skill created successfully!!!");
   } catch (e) {
-    console.error(e);
+    if (e.response) {
+      console.error("Server response:", e.response.status, e.response.data);
+    }
+    console.error("Upload failed:", e.message);
+    throw e;
   }
 };
 
@@ -134,4 +241,21 @@ async function selectFile({ fileName }) {
 
   console.log(`已生成压缩包: ${archivePath}`);
   return archivePath;
+}
+
+// 创建skills
+async function createSkill({ name, desc, mainContent, downloadUrl, apiKey }) {
+  const formData = new FormData();
+  formData.append("name", name);
+  formData.append("desc", desc);
+  formData.append("mainContent", mainContent);
+  formData.append("downloadUrl", downloadUrl);
+  formData.append("apiKey", apiKey);
+
+  const res = await axios.post("http://localhost:3000/api/skills", formData, {
+    headers: {
+      ...formData.getHeaders(),
+    },
+  });
+  return res.data;
 }
