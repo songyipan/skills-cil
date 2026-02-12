@@ -1,8 +1,9 @@
-import { program } from 'commander';
-
+import { Command } from 'commander';
 import { createNewProject } from './flow/new-project.js';
-import { runPushWorkflow } from './flow/push-work-flow.js'
+import { runPushWorkflow } from './flow/push-work-flow.js';
 import { createOneSkill } from './flow/create-one-skill.js';
+
+const program = new Command();
 
 program
   .version('1.0.0')
