@@ -1,16 +1,23 @@
 {
-  "name": "skill-hub",
-  "version": "1.0.0",
-  "description": "",
+  "name": "skills-cil",
+  "version": "1.0.3",
+  "description": "A CLI tool for managing skills and projects",
   "main": "dist/index.js",
   "type": "module",
+  "bin": {
+    "skills-cil": "./bin/skills-cil"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "tsc && node ./dist/index.js",
     "build": "tsc",
     "typecheck": "tsc --noEmit"
   },
-  "keywords": [],
+  "keywords": [
+    "cli",
+    "skills",
+    "skill"
+  ],
   "author": "",
   "license": "ISC",
   "packageManager": "pnpm@10.12.3",

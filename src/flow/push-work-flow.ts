@@ -1,10 +1,10 @@
-import inquirer from 'inquirer';
-import axios from 'axios';
-import fs from 'fs';
-import path from 'path';
-import archiver from 'archiver';
-import FormData from 'form-data';
-import chalk from 'chalk';
+import inquirer from "inquirer";
+import axios from "axios";
+import fs from "fs";
+import path from "path";
+import archiver from "archiver";
+import FormData from "form-data";
+import chalk from "chalk";
 import {
   PushSkillParams,
   UploadParams,
@@ -12,36 +12,40 @@ import {
   SkillInfo,
   CreateSkillParams,
   SkillAnswers,
-} from '../../types/index.js';
+} from "../../types/index.js";
 
 export const runPushWorkflow = async (): Promise<void> => {
   try {
     const answers = await inquirer.prompt<SkillAnswers>([
       {
-        type: 'input',
-        name: 'skillName',
-        message: 'Enter your skill name:',
+        type: "input",
+        name: "skillName",
+        message: "Enter your skill name:",
       },
       {
-        type: 'input',
-        name: 'githubRepoUrl',
-        message: 'The name of the repository on GitHub',
+        type: "input",
+        name: "githubRepoUrl",
+        message:
+          "The name of the repository on GitHub <username/repo>.  e.g. xiaosong/skills-cil:",
       },
       {
-        type:'confirm',
-        name:'confirm',
-        default:false,
-        message:"Are you sure that the name of the input warehouse is consistent with that of the remote one? Otherwise, it won't be accessible to other users."
-      }
-      
+        type: "confirm",
+        name: "confirm",
+        default: false,
+        message:
+          "Are you sure that the name of the input warehouse is consistent with that of the remote one? Otherwise, it won't be accessible to other users.",
+      },
     ]);
 
     if (!answers.confirm) {
-      console.log(chalk.red('Push skill canceled'));
-      throw new Error('Push skill canceled');
+      console.log(chalk.red("Push skill canceled"));
+      throw new Error("Push skill canceled");
     }
-    
-    handlePushSkill({ repoUrl: `${answers.githubRepoUrl}/${answers.skillName}`, skillName: answers.skillName });
+
+    handlePushSkill({
+      repoUrl: `${answers.githubRepoUrl}/${answers.skillName}`,
+      skillName: answers.skillName,
+    });
   } catch (error) {
     console.error(error);
   }
@@ -74,12 +78,12 @@ export const runPushWorkflow = async (): Promise<void> => {
 // }
 
 async function getApiKey(): Promise<string> {
-  const configPath = path.resolve('skills.register.json');
-  const configContent = await fs.promises.readFile(configPath, 'utf8');
+  const configPath = path.resolve("skills.register.json");
+  const configContent = await fs.promises.readFile(configPath, "utf8");
   const config = JSON.parse(configContent);
 
   if (!config.apiKey) {
-    throw new Error('apiKey not found in skills.register.json');
+    throw new Error("apiKey not found in skills.register.json");
   }
 
   return config.apiKey;
@@ -88,8 +92,8 @@ async function getApiKey(): Promise<string> {
 async function getSkillInfo(skillName: string): Promise<SkillInfo> {
   const skillDir = path.resolve(skillName);
 
-  const skillsJsonPath = path.join(skillDir, 'skills.json');
-  const skillMdPath = path.join(skillDir, 'SKILL.md');
+  const skillsJsonPath = path.join(skillDir, "skills.json");
+  const skillMdPath = path.join(skillDir, "SKILL.md");
 
   if (!fs.existsSync(skillsJsonPath)) {
     throw new Error(`skills.json not found: ${skillsJsonPath}`);
@@ -98,13 +102,16 @@ async function getSkillInfo(skillName: string): Promise<SkillInfo> {
     throw new Error(`SKILL.md not found: ${skillMdPath}`);
   }
 
-  const skillsJsonContent = await fs.promises.readFile(skillsJsonPath, 'utf8');
+  const skillsJsonContent = await fs.promises.readFile(skillsJsonPath, "utf8");
   const skillsJson = JSON.parse(skillsJsonContent);
 
-  const mainContent = await fs.promises.readFile(skillMdPath, 'utf8');
+  const mainContent = await fs.promises.readFile(skillMdPath, "utf8");
 
   return {
-    desc: (skillsJson as Record<string, unknown>)['skill-description'] as string || '',
+    desc:
+      ((skillsJson as Record<string, unknown>)[
+        "skill-description"
+      ] as string) || "",
     mainContent,
   };
 }
@@ -166,14 +173,17 @@ async function getSkillInfo(skillName: string): Promise<SkillInfo> {
 //   }
 // };
 
-export const handlePushSkill = async ({ repoUrl, skillName }: PushSkillParams): Promise<void> => {
+export const handlePushSkill = async ({
+  repoUrl,
+  skillName,
+}: PushSkillParams): Promise<void> => {
   try {
     const apiKey = await getApiKey();
     const { desc, mainContent } = await getSkillInfo(skillName);
 
     if (!repoUrl) {
-      console.log(chalk.red('Repository is required'));
-      throw new Error('Repository is required');
+      console.log(chalk.red("Repository is required"));
+      throw new Error("Repository is required");
     }
 
     console.log(chalk.blue(`Pushing skill: ${skillName} ...`));
@@ -185,12 +195,16 @@ export const handlePushSkill = async ({ repoUrl, skillName }: PushSkillParams): 
       downloadUrl: repoUrl,
       apiKey,
     });
-    console.log(chalk.green('Skill created successfully!!!'));
+    console.log(chalk.green("Skill created successfully!!!"));
   } catch (e) {
     if (axios.isAxiosError(e)) {
-      console.error(chalk.red('Server response:'), e.response?.status, e.response?.data);
+      console.error(
+        chalk.red("Server response:"),
+        e.response?.status,
+        e.response?.data,
+      );
     }
-    console.error(chalk.red('Upload failed:'), (e as Error).message);
+    console.error(chalk.red("Upload failed:"), (e as Error).message);
     throw e;
   }
 };
@@ -292,18 +306,28 @@ export const handlePushSkill = async ({ repoUrl, skillName }: PushSkillParams): 
 //   return archivePath;
 // }
 
-async function createSkill({ name, desc, mainContent, downloadUrl, apiKey }: CreateSkillParams): Promise<unknown> {
+async function createSkill({
+  name,
+  desc,
+  mainContent,
+  downloadUrl,
+  apiKey,
+}: CreateSkillParams): Promise<unknown> {
   const formData = new FormData();
-  formData.append('name', name);
-  formData.append('desc', desc);
-  formData.append('mainContent', mainContent);
-  formData.append('downloadUrl', downloadUrl);
-  formData.append('apiKey', apiKey);
+  formData.append("name", name);
+  formData.append("desc", desc);
+  formData.append("mainContent", mainContent);
+  formData.append("downloadUrl", downloadUrl);
+  formData.append("apiKey", apiKey);
 
-  const res = await axios.post('http://localhost:3000/api/skills', formData, {
-    headers: {
-      ...formData.getHeaders(),
+  const res = await axios.post(
+    "https://www.skill-hub.cn/api/skills",
+    formData,
+    {
+      headers: {
+        ...formData.getHeaders(),
+      },
     },
-  });
+  );
   return res.data;
 }

@@ -1,12 +1,12 @@
 export interface SkillConfig {
-  'project-name': string;
+  "project-name": string;
   skills: string[];
   apiKey: string;
 }
 
 export interface SkillJson {
-  'skill-name': string;
-  'skill-description': string;
+  "skill-name": string;
+  "skill-description": string;
 }
 
 export interface SkillInfo {
@@ -51,4 +51,17 @@ export interface SkillAnswers {
 
 export interface FolderAnswers {
   folderName: string;
+}
+
+// 技能详情
+export interface SkillDetail {
+  id: string;
+  name: string;
+  downloads: number;
+  desc: string;
+  mainContent: string;
+  downloadUrl: string;
+  userId: string;
+  createdAt: Date;
+  skillCategoryId?: string;
 }

@@ -1,8 +1,8 @@
-import fs from 'fs';
-import path from 'path';
-import inquirer from 'inquirer';
-import chalk from 'chalk';
-import { FolderAnswers, SkillJson } from '../../types/index.js';
+import fs from "fs";
+import path from "path";
+import inquirer from "inquirer";
+import chalk from "chalk";
+import { FolderAnswers, SkillJson } from "../../types/index.js";
 
 const createSkillFolderWithFile = async (folderName: string): Promise<void> => {
   try {
@@ -11,23 +11,23 @@ const createSkillFolderWithFile = async (folderName: string): Promise<void> => {
 
     await fs.promises.mkdir(targetDir, { recursive: true });
 
-    const skillFilePath = path.join(targetDir, 'SKILL.md');
-    const jsonFilePath = path.join(targetDir, 'skills.json');
+    const skillFilePath = path.join(targetDir, "SKILL.md");
+    const jsonFilePath = path.join(targetDir, "skills.json");
 
     const jsonDefault: SkillJson = {
-      'skill-name': folderName,
-      'skill-description': 'Write your skill description here.',
+      "skill-name": folderName,
+      "skill-description": "",
     };
 
     const defaultContent = `# ${folderName}\n\nWrite your skill documentation here.\n`;
 
     await fs.promises.writeFile(skillFilePath, defaultContent, {
-      encoding: 'utf8',
+      encoding: "utf8",
     });
     await fs.promises.writeFile(
       jsonFilePath,
       JSON.stringify(jsonDefault, null, 2),
-      { encoding: 'utf8' },
+      { encoding: "utf8" },
     );
 
     console.log(
@@ -36,21 +36,21 @@ const createSkillFolderWithFile = async (folderName: string): Promise<void> => {
       ),
     );
   } catch (error) {
-    console.error('Failed to create SKILL.md:', error);
+    console.error("Failed to create SKILL.md:", error);
   }
 };
 
 const inputFolderName = async (): Promise<void> => {
   const answers = await inquirer.prompt<FolderAnswers>([
     {
-      type: 'input',
-      name: 'folderName',
-      message: 'Please input the skill folder name to create:',
+      type: "input",
+      name: "folderName",
+      message: "Please input the skill folder name to create:",
     },
   ]);
 
   if (!answers.folderName) {
-    console.log(chalk.red('Folder name cannot be empty.'));
+    console.log(chalk.red("Folder name cannot be empty."));
     process.exit(1);
   }
 
